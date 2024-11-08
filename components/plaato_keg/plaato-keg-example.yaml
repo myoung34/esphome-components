@@ -1,0 +1,77 @@
+esphome:
+  name: plaato-keg
+  platform: ESP32
+  board: nodemcu-32s
+  libraries:
+    - SPI
+    - Wire
+    - adafruit/Adafruit BusIO
+    - adafruit/Adafruit PCT2075
+
+external_components:
+  - source:  github://myoung34/esphome-components@main
+    components: [plaato_keg]
+
+# This is the 3rd LED (closest to the plug)
+# https://esphome.io/components/status_led.html
+status_led:
+    pin: GPIO27
+
+output:
+  - platform: ledc
+    pin: GPIO25
+    id: plaato_keg_led1
+    inverted: True
+  - platform: ledc
+    pin: GPIO26
+    id: plaato_keg_led2
+    inverted: True
+  - platform: gpio
+    pin: GPIO32
+    id: plaato_keg_water_sensor_activation
+
+switch:
+  - platform: output
+    name: "Plaato Keg Water Activation"
+    output: 'plaato_keg_water_sensor_activation'
+
+light:
+  - platform: monochromatic
+    output: plaato_keg_led1
+    name: "Plaato Keg LED1"
+    restore_mode: ALWAYS_ON
+  - platform: monochromatic
+    output: plaato_keg_led2
+    name: "Plaato Keg LED2"
+
+binary_sensor:
+  - platform: gpio
+    id: plaato_keg_magnet_sensor
+    name: "Plaato Keg Magnetic Sensor"
+    pin:
+      number: GPIO34
+      inverted: True
+  - platform: gpio
+    id: plaato_keg_water_sensor
+    name: "Plaato Keg Water Sensor"
+    pin:
+      number: GPIO35
+      inverted: True
+  
+sensor:
+  - platform: plaato_keg
+    temp_sensor:
+      name: "Temperature"
+  - platform: hx711
+    name: "Plaato Keg HX711 Value"
+    dout_pin: 17
+    clk_pin: 16
+    gain: 128
+    update_interval: 60s
+    filters:
+      - multiply: -1.0
+      - offset: -24255 # Probably want to calibrate this yourself
+      - calibrate_linear:
+          - 49712 -> 2.5 # Probably want to calibrate this yourself
+          - 203270 -> 10 # Probably want to calibrate this yourself
+    unit_of_measurement: lb
