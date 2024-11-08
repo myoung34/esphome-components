@@ -1,0 +1,16 @@
+external_components:
+  - source: github://your_username/esphome-custom-components/components/plaato_airlock
+
+sensor:
+  - platform: custom
+    lambda: |-
+      auto airlock = new esphome::plaato_airlock::PlaatoAirlock();
+      airlock->set_temperature_sensor(id(temp_sensor));
+      airlock->set_bubble_count_sensor(id(bubble_count_sensor));
+      App.register_component(airlock);
+      return {airlock};
+    sensors:
+      - name: "Plaato Airlock Temperature"
+        id: temp_sensor
+      - name: "Plaato Airlock Bubble Count"
+        id: bubble_count_sensor
