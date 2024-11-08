@@ -1,33 +1,62 @@
 #pragma once
-
-#include "esphome.h"
-#include "sensor/sensor.h"
+#include "esphome/core/defines.h"
+#include "esphome/core/component.h"
+#include "plaato_stm8.h"
+#include "pct2075.h"
 
 namespace esphome {
 namespace plaato_airlock {
 
-class PlaatoAirlock : public PollingComponent {
+#define CHECK_BIT(var, pos) (((var) >> (pos)) & 1)
+
+static const uint8_t MPQ4242_REGISTER_CLK_ON = 0x39;
+
+/// FIXME: Update this description for the component
+/// This class includes i2c support for the MPQ4242 USB PD controller.
+/// The device has 7 configurable PDOs, 2 GPIOs with several functions
+/// and is capable of up to 100W charging. This class is for the
+/// MPQ4242 configuration.
+class PlaatoAirlockComponent : public i2c::I2CDevice, public Component {
  public:
-  // Constructor with polling interval
-  PlaatoAirlock() : PollingComponent(10000) {}
+  void loop() override;
 
-  // Setup method for initial setup
+  enum PlaatoAirlockLEDMode : uint8_t {
+    NO_MODE,
+    COUNTING1,
+    COUNTING2,
+    SLOWBREATHING,
+    FASTBREATHING,
+    SLOWFLASH,
+    FASTFLASH,
+    ALLOFF,
+    ALLON,
+    BOT,
+    MID,
+    TOP,
+    SLOWDOWN,
+    FASTDOWN,
+    SLOWUP,
+    FASTUP,
+    BOTSLOWFLASH,
+    BOTFASTFLASH,
+    MIDSLOWFLASH,
+    MIDFASTFLASH,
+    TOPSLOWFLASH,
+    TOPFASTFLASH,
+    BOTONBUBBLE
+  };
+
+  void set_led_mode(uint8_t mode);
+
+  /** Used by ESPHome framework. */
   void setup() override;
-
-  // Update method, called at each polling interval
-  void update() override;
-
-  // Setters for linking to ESPHome sensors configured in YAML
-  void set_temperature_sensor(sensor::Sensor *temp_sensor) { temperature_sensor_ = temp_sensor; }
-  void set_bubble_count_sensor(sensor::Sensor *bubble_count_sensor) { bubble_count_sensor_ = bubble_count_sensor; }
+  /** Used by ESPHome framework. */
+  void dump_config() override;
+  /** Used by ESPHome framework. */
+  float get_setup_priority() const override;
 
  protected:
-  sensor::Sensor *temperature_sensor_{nullptr};
-  sensor::Sensor *bubble_count_sensor_{nullptr};
-
-  // Logic to calculate temperature and bubble count
-  float calculate_temperature();
-  float calculate_bubble_count();
+  i2c::ErrorCode last_error_;
 };
 
 }  // namespace plaato_airlock
