@@ -1,16 +1,23 @@
-external_components:
-  - source: github://your_username/esphome-custom-components/components/plaato_airlock
+esphome:
+  name: plaato-airlock
 
+esp8266:
+  board: nodemcuv2
+
+external_components:
+  - source:  github://myoung34/esphome-components@main
+    components: [plaato_airlock]
+
+i2c:
+  sda: GPIO14
+  scl: GPIO12
+  scan: false
+  frequency: 100kHz
+  id: bus_a
+  
 sensor:
-  - platform: custom
-    lambda: |-
-      auto airlock = new esphome::plaato_airlock::PlaatoAirlock();
-      airlock->set_temperature_sensor(id(temp_sensor));
-      airlock->set_bubble_count_sensor(id(bubble_count_sensor));
-      App.register_component(airlock);
-      return {airlock};
-    sensors:
-      - name: "Plaato Airlock Temperature"
-        id: temp_sensor
-      - name: "Plaato Airlock Bubble Count"
-        id: bubble_count_sensor
+ - platform: plaato_airlock
+   temp_sensor:
+     name: "Temperature"
+   bubble_sensor:
+     name: "Number Of Bubbles"
