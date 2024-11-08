@@ -1,34 +1,26 @@
 #pragma once
 
-#include "esphome.h"
-#include "sensor/sensor.h"
+#include "esphome/core/log.h"
+#include "esphome/core/component.h"
+#include "esphome/components/sensor/sensor.h"
 
 namespace esphome {
 namespace plaato_airlock {
 
-class PlaatoAirlock : public PollingComponent {
- public:
-  // Constructor with polling interval
-  PlaatoAirlock() : PollingComponent(10000) {}
+class PlaatoAirlock : public sensor::Sensor, public PollingComponent {
+  public:  
+    void set_temp_sensor(sensor::Sensor *temp_sensor) { temp_sensor_ = temp_sensor; }
+    void set_bubble_sensor(sensor::Sensor *bubble_sensor) { bubble_sensor_ = bubble_sensor; }
 
-  // Setup method for initial setup
-  void setup() override;
+    void setup() override;
+    void loop() override;
+    void update() override;
+    void dump_config() override;
 
-  // Update method, called at each polling interval
-  void update() override;
-
-  // Setters for linking to ESPHome sensors configured in YAML
-  void set_temperature_sensor(sensor::Sensor *temp_sensor) { temperature_sensor_ = temp_sensor; }
-  void set_bubble_count_sensor(sensor::Sensor *bubble_count_sensor) { bubble_count_sensor_ = bubble_count_sensor; }
-
- protected:
-  sensor::Sensor *temperature_sensor_{nullptr};
-  sensor::Sensor *bubble_count_sensor_{nullptr};
-
-  // Logic to calculate temperature and bubble count
-  float calculate_temperature();
-  float calculate_bubble_count();
+  protected:
+    sensor::Sensor *temp_sensor_;
+    sensor::Sensor *bubble_sensor_;
 };
 
-}  // namespace plaato_airlock
-}  // namespace esphome
+} //namespace plaato_airlock
+} //namespace esphome

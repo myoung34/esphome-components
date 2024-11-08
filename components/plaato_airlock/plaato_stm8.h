@@ -2,10 +2,6 @@
 
 #include <Wire.h>
 
-extern "C" {
-  #include "user_interface.h"           // Needed for system_get_rst_info() in simulator
-}
-
 class  Plaato_stm8 {
   private:
     int address = 0x3;
@@ -107,45 +103,3 @@ class  Plaato_stm8 {
     }
 };
 
-class  Plaato_stm8_simulator {
-  private:
-    uint32_t *ESP_bubble_count = (uint32_t *)0x60001200;
-    uint32_t *extern_sleep_counter = (uint32_t *)0x60001240;
-    bool reset_flag = false;
-  public:
-    bool setup() {
-		if (system_get_rst_info()->reason != REASON_DEEP_SLEEP_AWAKE) {
-			*ESP_bubble_count = 0;
-		}
-		pinMode(0, INPUT);
-		return true;
-    }
-
-    bool set_led(uint8_t led_mode) {
-      (void)led_mode;
-      return true;
-    }
-
-    bool sync() {
-      	if (digitalRead(0) == false) {
-  			reset_flag = true;
-  		}
-		*ESP_bubble_count += 5 * (*extern_sleep_counter);
-		return true;
-    }
-
-    uint32_t get_count() {
-      return *ESP_bubble_count;
-    }
-
-    bool get_reset_flag() {
-      return reset_flag;
-    }
-};
-
-
-#ifdef SIMULATE_SENSORS
-  Plaato_stm8_simulator stm8;
-#else
-  Plaato_stm8 stm8;
-#endif

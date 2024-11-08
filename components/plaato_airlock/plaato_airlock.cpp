@@ -1,47 +1,48 @@
 #include "plaato_airlock.h"
+#include "plaato_stm8.h"
+#include "pct2075.h"
 
 namespace esphome {
 namespace plaato_airlock {
 
+static const char *TAG = "plaato_airlock.sensor";
+
 void PlaatoAirlock::setup() {
-  // Log setup completion for debugging
-  ESP_LOGI("plaato_airlock", "Plaato Airlock setup complete");
+}
+
+void PlaatoAirlock::loop() {
+  
 }
 
 void PlaatoAirlock::update() {
-  // Calculate and publish temperature if temperature_sensor_ is set
-  if (temperature_sensor_ != nullptr) {
-    float temp = calculate_temperature();
-    ESP_LOGD("plaato_airlock", "Temperature: %.2f", temp);
-    temperature_sensor_->publish_state(temp);
+  if (this->temp_sensor_ != nullptr) {
+    Pct2075 temperature_sensor;
+    temperature_sensor.wake_up();
+    temperature_sensor.read_temperature();
+    temperature_sensor.shut_down();
+    float temp = temperature_sensor.get_temperature();
+    ESP_LOGD("main", "temperature: %0.2f°C", temp);
+    this->temp_sensor_->publish_state(temp);
   }
+  if (this->bubble_sensor_ != nullptr) {
+    Plaato_stm8 stm8;
+    // Check for reset and get bubblecount
+    stm8.sync();
 
-  // Calculate and publish bubble count if bubble_count_sensor_ is set
-  if (bubble_count_sensor_ != nullptr) {
-    float bubble_count = calculate_bubble_count();
-    ESP_LOGD("plaato_airlock", "Bubble Count: %.2f", bubble_count);
-    bubble_count_sensor_->publish_state(bubble_count);
+    // Set LED on STM8
+    stm8.set_led(3);
+
+    // Get values and publish them
+    int bubble_count = stm8.get_count();
+
+    ESP_LOGD("main", "bubbles: %d", bubble_count);
+    this->bubble_sensor_->publish_state(bubble_count);
   }
 }
 
-float PlaatoAirlock::calculate_temperature() {
-  // Wake up, read temperature, and shut down sensor
-  temperature_sensor_.wake_up();
-  temperature_sensor_.read_temperature();
-  temperature_sensor_.shut_down();
-
-  // Retrieve and return temperature value
-  float temp = temperature_sensor_.get_temperature();
-  return temp;
+void PlaatoAirlock::dump_config() {
+  ESP_LOGCONFIG(TAG, "Plaato Airlock sensor");
 }
 
-float PlaatoAirlock::calculate_bubble_count() {
-  // Synchronize with STM8, set LED state, and retrieve bubble count
-  stm8.sync();
-  stm8.set_led(SLOWBREATHING);
-  int bubble_count = stm8.get_count();
-  return static_cast<float>(bubble_count);
-}
-
-}  // namespace plaato_airlock
-}  // namespace esphome
+} //namespace plaato_airlock
+} //namespace esphome
