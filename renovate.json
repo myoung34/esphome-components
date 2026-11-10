@@ -3,5 +3,12 @@
   "extends": [
     "config:recommended",
     ":enablePreCommit"
+  ],
+  "packageRules": [
+    {
+      "description": "Automerge non-major updates so renovate-approve approves them",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    }
   ]
 }
